@@ -1,7 +1,7 @@
 package com.atlas.pharmacy.views.drug;
 
-import com.atlas.pharmacy.data.entity.SamplePerson;
-import com.atlas.pharmacy.data.service.SamplePersonService;
+import com.atlas.pharmacy.data.entity.Patient;
+import com.atlas.pharmacy.data.service.PatientService;
 import com.atlas.pharmacy.views.MainLayout;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -42,7 +42,7 @@ public class DrugView extends Div implements BeforeEnterObserver {
     private final String SAMPLEPERSON_ID = "samplePersonID";
     private final String SAMPLEPERSON_EDIT_ROUTE_TEMPLATE = "drug/%s/edit";
 
-    private final Grid<SamplePerson> grid = new Grid<>(SamplePerson.class, false);
+    private final Grid<Patient> grid = new Grid<>(Patient.class, false);
 
     private TextField firstName;
     private TextField lastName;
@@ -56,14 +56,14 @@ public class DrugView extends Div implements BeforeEnterObserver {
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
 
-    private final BeanValidationBinder<SamplePerson> binder;
+    private final BeanValidationBinder<Patient> binder;
 
-    private SamplePerson samplePerson;
+    private Patient patient;
 
-    private final SamplePersonService samplePersonService;
+    private final PatientService patientService;
 
-    public DrugView(SamplePersonService samplePersonService) {
-        this.samplePersonService = samplePersonService;
+    public DrugView(PatientService patientService) {
+        this.patientService = patientService;
         addClassNames("drug-view");
 
         // Create UI
@@ -82,7 +82,7 @@ public class DrugView extends Div implements BeforeEnterObserver {
         grid.addColumn("dateOfBirth").setAutoWidth(true);
         grid.addColumn("occupation").setAutoWidth(true);
         grid.addColumn("role").setAutoWidth(true);
-        LitRenderer<SamplePerson> importantRenderer = LitRenderer.<SamplePerson>of(
+        LitRenderer<Patient> importantRenderer = LitRenderer.<Patient>of(
                 "<vaadin-icon icon='vaadin:${item.icon}' style='width: var(--lumo-icon-size-s); height: var(--lumo-icon-size-s); color: ${item.color};'></vaadin-icon>")
                 .withProperty("icon", important -> important.isImportant() ? "check" : "minus").withProperty("color",
                         important -> important.isImportant()
@@ -91,7 +91,7 @@ public class DrugView extends Div implements BeforeEnterObserver {
 
         grid.addColumn(importantRenderer).setHeader("Important").setAutoWidth(true);
 
-        grid.setItems(query -> samplePersonService.list(
+        grid.setItems(query -> patientService.list(
                 PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)))
                 .stream());
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
@@ -107,7 +107,7 @@ public class DrugView extends Div implements BeforeEnterObserver {
         });
 
         // Configure Form
-        binder = new BeanValidationBinder<>(SamplePerson.class);
+        binder = new BeanValidationBinder<>(Patient.class);
 
         // Bind fields. This is where you'd define e.g. validation rules
 
@@ -120,11 +120,11 @@ public class DrugView extends Div implements BeforeEnterObserver {
 
         save.addClickListener(e -> {
             try {
-                if (this.samplePerson == null) {
-                    this.samplePerson = new SamplePerson();
+                if (this.patient == null) {
+                    this.patient = new Patient();
                 }
-                binder.writeBean(this.samplePerson);
-                samplePersonService.update(this.samplePerson);
+                binder.writeBean(this.patient);
+                patientService.update(this.patient);
                 clearForm();
                 refreshGrid();
                 Notification.show("Data updated");
@@ -144,7 +144,7 @@ public class DrugView extends Div implements BeforeEnterObserver {
     public void beforeEnter(BeforeEnterEvent event) {
         Optional<Long> samplePersonId = event.getRouteParameters().get(SAMPLEPERSON_ID).map(Long::parseLong);
         if (samplePersonId.isPresent()) {
-            Optional<SamplePerson> samplePersonFromBackend = samplePersonService.get(samplePersonId.get());
+            Optional<Patient> samplePersonFromBackend = patientService.get(samplePersonId.get());
             if (samplePersonFromBackend.isPresent()) {
                 populateForm(samplePersonFromBackend.get());
             } else {
@@ -209,9 +209,9 @@ public class DrugView extends Div implements BeforeEnterObserver {
         populateForm(null);
     }
 
-    private void populateForm(SamplePerson value) {
-        this.samplePerson = value;
-        binder.readBean(this.samplePerson);
+    private void populateForm(Patient value) {
+        this.patient = value;
+        binder.readBean(this.patient);
 
     }
 }

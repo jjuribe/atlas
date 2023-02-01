@@ -1,7 +1,7 @@
 package com.atlas.pharmacy.views.patient;
 
-import com.atlas.pharmacy.data.entity.SamplePerson;
-import com.atlas.pharmacy.data.service.SamplePersonService;
+import com.atlas.pharmacy.data.entity.Patient;
+import com.atlas.pharmacy.data.service.PatientService;
 import com.atlas.pharmacy.views.MainLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;
@@ -42,13 +42,13 @@ import org.springframework.data.jpa.domain.Specification;
 @Uses(Icon.class)
 public class PatientView extends Div {
 
-    private Grid<SamplePerson> grid;
+    private Grid<Patient> grid;
 
     private Filters filters;
-    private final SamplePersonService samplePersonService;
+    private final PatientService patientService;
 
-    public PatientView(SamplePersonService SamplePersonService) {
-        this.samplePersonService = SamplePersonService;
+    public PatientView(PatientService PatientService) {
+        this.patientService = PatientService;
         setSizeFull();
         addClassNames("patient-view");
 
@@ -84,7 +84,7 @@ public class PatientView extends Div {
         return mobileFilters;
     }
 
-    public static class Filters extends Div implements Specification<SamplePerson> {
+    public static class Filters extends Div implements Specification<Patient> {
 
         private final TextField name = new TextField("Name");
         private final TextField phone = new TextField("Phone");
@@ -152,7 +152,7 @@ public class PatientView extends Div {
         }
 
         @Override
-        public Predicate toPredicate(Root<SamplePerson> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+        public Predicate toPredicate(Root<Patient> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
             List<Predicate> predicates = new ArrayList<>();
 
             if (!name.isEmpty()) {
@@ -225,7 +225,7 @@ public class PatientView extends Div {
     }
 
     private Component createGrid() {
-        grid = new Grid<>(SamplePerson.class, false);
+        grid = new Grid<>(Patient.class, false);
         grid.addColumn("firstName").setAutoWidth(true);
         grid.addColumn("lastName").setAutoWidth(true);
         grid.addColumn("email").setAutoWidth(true);
@@ -234,7 +234,7 @@ public class PatientView extends Div {
         grid.addColumn("occupation").setAutoWidth(true);
         grid.addColumn("role").setAutoWidth(true);
 
-        grid.setItems(query -> samplePersonService.list(
+        grid.setItems(query -> patientService.list(
                 PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)),
                 filters).stream());
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);

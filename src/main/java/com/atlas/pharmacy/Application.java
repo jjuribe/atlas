@@ -1,6 +1,6 @@
 package com.atlas.pharmacy;
 
-import com.atlas.pharmacy.data.service.SamplePersonRepository;
+import com.atlas.pharmacy.data.service.PatientRepository;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.theme.Theme;
@@ -30,7 +30,7 @@ public class Application extends SpringBootServletInitializer implements AppShel
 
     @Bean
     SqlDataSourceScriptDatabaseInitializer dataSourceScriptDatabaseInitializer(DataSource dataSource,
-            SqlInitializationProperties properties, SamplePersonRepository repository) {
+            SqlInitializationProperties properties, PatientRepository repository) {
         // This bean ensures the database is only initialized when empty
         return new SqlDataSourceScriptDatabaseInitializer(dataSource, properties) {
             @Override

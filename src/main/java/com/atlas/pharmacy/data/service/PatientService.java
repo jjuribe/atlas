@@ -1,6 +1,6 @@
 package com.atlas.pharmacy.data.service;
 
-import com.atlas.pharmacy.data.entity.SamplePerson;
+import com.atlas.pharmacy.data.entity.Patient;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,19 +8,19 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SamplePersonService {
+public class PatientService {
 
-    private final SamplePersonRepository repository;
+    private final PatientRepository repository;
 
-    public SamplePersonService(SamplePersonRepository repository) {
+    public PatientService(PatientRepository repository) {
         this.repository = repository;
     }
 
-    public Optional<SamplePerson> get(Long id) {
+    public Optional<Patient> get(Long id) {
         return repository.findById(id);
     }
 
-    public SamplePerson update(SamplePerson entity) {
+    public Patient update(Patient entity) {
         return repository.save(entity);
     }
 
@@ -28,11 +28,11 @@ public class SamplePersonService {
         repository.deleteById(id);
     }
 
-    public Page<SamplePerson> list(Pageable pageable) {
+    public Page<Patient> list(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
-    public Page<SamplePerson> list(Pageable pageable, Specification<SamplePerson> filter) {
+    public Page<Patient> list(Pageable pageable, Specification<Patient> filter) {
         return repository.findAll(filter, pageable);
     }
 
