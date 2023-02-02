@@ -26,7 +26,7 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         i18n.setHeader(new LoginI18n.Header());
         i18n.getHeader().setTitle("Atlas");
         i18n.getHeader().setDescription("Login using user/user or admin/admin");
-        i18n.setAdditionalInformation(null);
+        i18n.setAdditionalInformation("Pharmacy drug inventory system");
         setI18n(i18n);
 
         setForgotPasswordButtonVisible(false);

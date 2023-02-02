@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>Persistence</ID>
+  <OriginalElement>JavaeeElement:/d777b3fe/entityManagerFactory/atlas/jpa/JPA/PersistenceModel</OriginalElement>
+  <nodes>
+    <node x="-107.0" y="537.0">AbstractPersistable#jar://C:/Users/jacks/.m2/repository/org/springframework/data/spring-data-jpa/3.0.1/spring-data-jpa-3.0.1.jar!/org/springframework/data/jpa/domain/AbstractPersistable.class</node>
+    <node x="-97.5" y="57.0">User#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/User.java</node>
+    <node x="-108.0" y="641.0">AbstractAuditable#jar://C:/Users/jacks/.m2/repository/org/springframework/data/spring-data-jpa/3.0.1/spring-data-jpa-3.0.1.jar!/org/springframework/data/jpa/domain/AbstractAuditable.class</node>
+    <node x="503.5" y="35.0">Drug#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Drug.java</node>
+    <node x="86.49999999999997" y="46.0">Prescriber#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescriber.java</node>
+    <node x="61.68421052631578" y="350.0">Prescription#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescription.java</node>
+    <node x="321.5" y="-42.0">Patient#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Patient.java</node>
+    <node x="129.99999999999997" y="-170.0">AbstractEntity#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/AbstractEntity.java</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="User#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/User.java" target="AbstractEntity#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/AbstractEntity.java" relationship="INHERITANCE">
+      <point x="0.0" y="-71.0" />
+      <point x="-15.5" y="-68.0" />
+      <point x="194.0" y="-68.0" />
+      <point x="0.0" y="38.0" />
+    </edge>
+    <edge source="Prescriber#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescriber.java" target="Prescription#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescription.java" relationship="RELATION">
+      <point x="0.0" y="82.0" />
+      <point x="194.0" y="319.0" />
+      <point x="401.9342105263158" y="319.0" />
+      <point x="401.9342105263158" y="329.0" />
+      <point x="189.18421052631578" y="329.0" />
+      <point x="42.5" y="-71.0" />
+    </edge>
+    <edge source="Prescription#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescription.java" target="Prescriber#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescriber.java" relationship="RELATION">
+      <point x="42.5" y="-71.0" />
+      <point x="189.18421052631578" y="329.0" />
+      <point x="401.9342105263158" y="329.0" />
+      <point x="401.9342105263158" y="319.0" />
+      <point x="194.0" y="319.0" />
+      <point x="0.0" y="82.0" />
+    </edge>
+    <edge source="Prescription#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescription.java" target="AbstractEntity#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/AbstractEntity.java" relationship="INHERITANCE">
+      <point x="-42.5" y="-71.0" />
+      <point x="104.18421052631578" y="329.0" />
+      <point x="-108.0" y="329.0" />
+      <point x="-108.0" y="-68.0" />
+      <point x="194.0" y="-68.0" />
+      <point x="0.0" y="38.0" />
+    </edge>
+    <edge source="AbstractAuditable#jar://C:/Users/jacks/.m2/repository/org/springframework/data/spring-data-jpa/3.0.1/spring-data-jpa-3.0.1.jar!/org/springframework/data/jpa/domain/AbstractAuditable.class" target="AbstractPersistable#jar://C:/Users/jacks/.m2/repository/org/springframework/data/spring-data-jpa/3.0.1/spring-data-jpa-3.0.1.jar!/org/springframework/data/jpa/domain/AbstractPersistable.class" relationship="INHERITANCE">
+      <point x="0.0" y="-38.0" />
+      <point x="0.0" y="27.0" />
+    </edge>
+    <edge source="Patient#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Patient.java" target="AbstractEntity#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/AbstractEntity.java" relationship="INHERITANCE">
+      <point x="0.0" y="-170.0" />
+      <point x="402.5" y="-68.0" />
+      <point x="194.0" y="-68.0" />
+      <point x="0.0" y="38.0" />
+    </edge>
+    <edge source="Prescription#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescription.java" target="Drug#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Drug.java" relationship="RELATION">
+      <point x="42.5" y="-71.0" />
+      <point x="189.18421052631578" y="329.0" />
+      <point x="401.9342105263158" y="329.0" />
+      <point x="401.9342105263158" y="319.0" />
+      <point x="605.0" y="319.0" />
+      <point x="0.0" y="93.0" />
+    </edge>
+    <edge source="Drug#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Drug.java" target="Prescription#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescription.java" relationship="RELATION">
+      <point x="0.0" y="93.0" />
+      <point x="605.0" y="319.0" />
+      <point x="401.9342105263158" y="319.0" />
+      <point x="401.9342105263158" y="329.0" />
+      <point x="189.18421052631578" y="329.0" />
+      <point x="42.5" y="-71.0" />
+    </edge>
+    <edge source="Drug#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Drug.java" target="AbstractEntity#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/AbstractEntity.java" relationship="INHERITANCE">
+      <point x="0.0" y="-93.0" />
+      <point x="605.0" y="-68.0" />
+      <point x="194.0" y="-68.0" />
+      <point x="0.0" y="38.0" />
+    </edge>
+    <edge source="Prescriber#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescriber.java" target="AbstractEntity#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/AbstractEntity.java" relationship="INHERITANCE">
+      <point x="2.8421709430404007E-14" y="-82.0" />
+      <point x="0.0" y="38.0" />
+    </edge>
+    <edge source="Patient#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Patient.java" target="Prescription#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescription.java" relationship="RELATION">
+      <point x="0.0" y="170.0" />
+      <point x="401.9342105263158" y="329.0" />
+      <point x="189.18421052631578" y="329.0" />
+      <point x="42.5" y="-71.0" />
+    </edge>
+    <edge source="Prescription#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Prescription.java" target="Patient#file://C:/Users/jacks/Desktop/atlas/src/main/java/com/atlas/pharmacy/data/entity/Patient.java" relationship="RELATION">
+      <point x="42.5" y="-71.0" />
+      <point x="189.18421052631578" y="329.0" />
+      <point x="401.9342105263158" y="329.0" />
+      <point x="0.0" y="170.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic" zoom="0.9647188533627343" showDependencies="false" x="309.5" y="283.5" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Embeddables</Category>
+    <Category>Properties</Category>
+    <Category>Superclasses</Category>
+  </Categories>
+</Diagram>
+
