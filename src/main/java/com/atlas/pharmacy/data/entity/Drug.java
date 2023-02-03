@@ -14,6 +14,7 @@ public class Drug extends AbstractEntity {
 
     private long drugIdentificationNumber;
     private String dosage;
+    private String manufacturer;
     private String brandName;
     private String genericName;
     private String description;

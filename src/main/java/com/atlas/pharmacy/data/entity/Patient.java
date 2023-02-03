@@ -2,7 +2,6 @@ package com.atlas.pharmacy.data.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,7 +22,6 @@ public class Patient extends AbstractEntity {
     private LocalDate dateOfBirth;
     private String occupation;
     private String role;
-    private boolean important;
 
     private String streetAddress;
     private String province;
