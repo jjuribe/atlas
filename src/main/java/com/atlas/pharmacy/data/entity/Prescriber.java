@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 public class Prescriber extends AbstractEntity {
 
-    private int licenseIdentificationNumber;
+    private long licenseIdentificationNumber;
     private String practice;
     private String firstName;
     private String lastName;

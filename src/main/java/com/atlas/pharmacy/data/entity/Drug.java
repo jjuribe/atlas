@@ -12,7 +12,8 @@ import java.util.List;
 @Setter
 public class Drug extends AbstractEntity {
 
-    private int drugIdentificationNumber;
+    private long drugIdentificationNumber;
+    private String dosage;
     private String brandName;
     private String genericName;
     private String description;

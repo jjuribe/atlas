@@ -39,5 +39,4 @@ public class PatientService {
     public int count() {
         return (int) repository.count();
     }
-
 }
