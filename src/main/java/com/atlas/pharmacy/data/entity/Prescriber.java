@@ -5,7 +5,9 @@ import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 @Getter
@@ -19,5 +21,9 @@ public class Prescriber extends AbstractEntity {
     private String officeAddress;
     private String postalCode;
     @OneToMany
-    private List<Prescription> prescriptions;
+    private List<Prescription> prescriptions = new ArrayList<>();
+
+    public Optional<String> getCompleteName() {
+        return Optional.of(String.format("%d %s %s", licenseIdentificationNumber, firstName, lastName));
+    }
 }

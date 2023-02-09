@@ -1,26 +1,26 @@
 package com.atlas.pharmacy.views.prescription;
 
+import com.atlas.pharmacy.data.entity.Prescription;
+import com.atlas.pharmacy.data.service.PRMService;
 import com.atlas.pharmacy.views.MainLayout;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.HeaderRow;
-import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.grid.dataview.GridLazyDataView;
 import com.vaadin.flow.component.gridpro.GridPro;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LocalDateRenderer;
 import com.vaadin.flow.data.renderer.NumberRenderer;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import jakarta.annotation.security.PermitAll;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -29,25 +29,37 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.PageRequest;
 
 @PageTitle("Prescription")
 @Route(value = "prescription", layout = MainLayout.class)
 @PermitAll
 public class PrescriptionView extends Div {
 
-    private GridPro<Client> grid;
-    private GridListDataView<Client> gridListDataView;
+    private static final String USER_PICTURE = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png";
 
-    private Grid.Column<Client> clientColumn;
-    private Grid.Column<Client> amountColumn;
-    private Grid.Column<Client> statusColumn;
-    private Grid.Column<Client> dateColumn;
+    private GridPro<Prescription> prescriptionGridPro;
+    private GridLazyDataView<Prescription> prescriptionGridListDataView;
+    private Grid.Column<Prescription> patientColumn;
+    private Grid.Column<Prescription> drugColumn;
+    private Grid.Column<Prescription> prescriberColumn;
+    private Grid.Column<Prescription> dispenseDateColumn;
+    private Grid.Column<Prescription> frequencyColumn;
+    private Grid.Column<Prescription> quantityColumn;
+    private Grid.Column<Prescription> refillsColumn;
+    private Grid.Column<Prescription> daySupplyColumn;
+    private Grid.Column<Prescription> totalCostColumn;
+    private Grid.Column<Prescription> daysRemainingColumn;
+    private Grid.Column<Prescription> nextRefillDateColumn;
 
-    public PrescriptionView() {
+    private final PRMService prmService;
+
+    public PrescriptionView(PRMService prmService) {
+        this.prmService = prmService;
         addClassName("prescription-view");
         setSizeFull();
         createGrid();
-        add(grid);
+        add(prescriptionGridPro);
     }
 
     private void createGrid() {
@@ -57,97 +69,156 @@ public class PrescriptionView extends Div {
     }
 
     private void createGridComponent() {
-        grid = new GridPro<>();
-        grid.setSelectionMode(SelectionMode.MULTI);
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COLUMN_BORDERS);
-        grid.setHeight("100%");
+        prescriptionGridPro = new GridPro<>();
+        prescriptionGridPro.setSelectionMode(SelectionMode.MULTI);
+        prescriptionGridPro.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COLUMN_BORDERS);
+        prescriptionGridPro.setHeight("100%");
 
-        List<Client> clients = getClients();
-        gridListDataView = grid.setItems(clients);
+        prescriptionGridListDataView = prescriptionGridPro.setItems(query -> {
+            return prmService.getPrescriptionService().list(
+                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query))
+            ).stream();
+        });
     }
 
     private void addColumnsToGrid() {
-        createClientColumn();
-        createAmountColumn();
-        createStatusColumn();
-        createDateColumn();
+        createPatientColumn();
+        createDrugColumn();
+        createPrescriberColumn();
+        createDispenseDateColumn();
+        createFrequencyColumn();
+        createQuantityColumn();
+        createRefillsColumn();
+        createDaySupplyColumn();
+        createTotalCostColumn();
+        createDaysRemainingColumn();
+        createNextRefillDateColumn();
     }
 
-    private void createClientColumn() {
-        clientColumn = grid.addColumn(new ComponentRenderer<>(client -> {
+    private void createPatientColumn() {
+        patientColumn = prescriptionGridPro.addColumn(new ComponentRenderer<>(prescription -> {
             HorizontalLayout hl = new HorizontalLayout();
             hl.setAlignItems(Alignment.CENTER);
-            Image img = new Image(client.getImg(), "");
+            Image img = new Image(USER_PICTURE, "");
             Span span = new Span();
             span.setClassName("name");
-            span.setText(client.getClient());
+            span.setText(prescription.getPatient().getFullName().orElseThrow());
             hl.add(img, span);
             return hl;
-        })).setComparator(client -> client.getClient()).setHeader("Client");
+        })).setComparator(prescription -> prescription.getPatient().getFullName().orElseThrow())
+                .setHeader("Patient");
     }
 
-    private void createAmountColumn() {
-        amountColumn = grid
-                .addEditColumn(Client::getAmount,
-                        new NumberRenderer<>(client -> client.getAmount(), NumberFormat.getCurrencyInstance(Locale.US)))
-                .text((item, newValue) -> item.setAmount(Double.parseDouble(newValue)))
-                .setComparator(client -> client.getAmount()).setHeader("Amount");
+    private void createDrugColumn() {
+        drugColumn = prescriptionGridPro.addColumn(prescription -> prescription.getDrug().getCompleteName().orElseThrow())
+                .setComparator(prescription -> prescription.getDrug().getCompleteName().orElseThrow())
+                .setHeader("Drug");
     }
 
-    private void createStatusColumn() {
-        statusColumn = grid.addEditColumn(Client::getClient, new ComponentRenderer<>(client -> {
-            Span span = new Span();
-            span.setText(client.getStatus());
-            span.getElement().setAttribute("theme", "badge " + client.getStatus().toLowerCase());
-            return span;
-        })).select((item, newValue) -> item.setStatus(newValue), Arrays.asList("Pending", "Success", "Error"))
-                .setComparator(client -> client.getStatus()).setHeader("Status");
+    private void createPrescriberColumn() {
+        prescriberColumn = prescriptionGridPro.addColumn(prescription -> prescription.getPrescriber().getCompleteName().orElseThrow())
+                .setComparator(prescription -> prescription.getPrescriber().getCompleteName().orElseThrow())
+                .setHeader("Prescriber");
     }
 
-    private void createDateColumn() {
-        dateColumn = grid
-                .addColumn(new LocalDateRenderer<>(client -> LocalDate.parse(client.getDate()),
-                        () -> DateTimeFormatter.ofPattern("M/d/yyyy")))
-                .setComparator(client -> client.getDate()).setHeader("Date").setWidth("180px").setFlexGrow(0);
+    private void createDispenseDateColumn() {
+        dispenseDateColumn = prescriptionGridPro.addColumn(Prescription::getDispenseDate)
+                .setComparator(Prescription::getDispenseDate)
+                .setHeader("Dispense Date")
+                .setWidth("180px")
+                .setFlexGrow(0);
     }
+
+    private void createFrequencyColumn() {
+        frequencyColumn = prescriptionGridPro.addEditColumn(Prescription::getFrequency)
+                .text(Prescription::setFrequency)
+                .setComparator(Prescription::getFrequency)
+                .setHeader("Frequency");
+    }
+
+    private void createQuantityColumn() {
+        quantityColumn = prescriptionGridPro.addEditColumn(Prescription::getQuantity)
+                .text((item, newValue) -> item.setQuantity(Double.parseDouble(newValue)))
+                .setComparator(Prescription::getQuantity)
+                .setHeader("Quantity");
+    }
+
+    private void createRefillsColumn() {
+        refillsColumn = prescriptionGridPro.addEditColumn(Prescription::getRefills)
+                .text((item, newValue) -> item.setRefills(Integer.parseInt(newValue)))
+                .setComparator(Prescription::getRefills)
+                .setHeader("Refills");
+    }
+
+    private void createDaySupplyColumn() {
+        daySupplyColumn = prescriptionGridPro.addEditColumn(Prescription::getDaySupplyDuration)
+                .text((item, newValue) -> item.setDaySupplyDuration(Integer.parseInt(newValue)))
+                .setComparator(Prescription::getDaySupplyDuration)
+                .setHeader("Day Supply");
+    }
+
+    private void createTotalCostColumn() {
+        totalCostColumn = prescriptionGridPro.addColumn(prescription -> prescription.getTotalCost().orElse(0.0))
+                .setHeader("Total Cost");
+    }
+
+    private void createDaysRemainingColumn() {
+        daysRemainingColumn = prescriptionGridPro.addColumn(prescription -> prescription.getActualDaysRemaining().orElse(0L))
+                .setHeader("Days Left");
+    }
+
+    private void createNextRefillDateColumn() {
+        nextRefillDateColumn = prescriptionGridPro.addColumn(prescription -> prescription.getNextRefillDate().orElse(LocalDate.now()))
+                .setHeader("Next Refill Date");
+    }
+
+//    private void createStatusColumn() {
+//        statusColumn = grid.addEditColumn(Client::getClient, new ComponentRenderer<>(client -> {
+//            Span span = new Span();
+//            span.setText(client.getStatus());
+//            span.getElement().setAttribute("theme", "badge " + client.getStatus().toLowerCase());
+//            return span;
+//        })).select((item, newValue) -> item.setStatus(newValue), Arrays.asList("Pending", "Success", "Error"))
+//                .setComparator(client -> client.getStatus()).setHeader("Status");
+//    }
 
     private void addFiltersToGrid() {
-        HeaderRow filterRow = grid.appendHeaderRow();
-
-        TextField clientFilter = new TextField();
-        clientFilter.setPlaceholder("Filter");
-        clientFilter.setClearButtonVisible(true);
-        clientFilter.setWidth("100%");
-        clientFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        clientFilter.addValueChangeListener(event -> gridListDataView
-                .addFilter(client -> StringUtils.containsIgnoreCase(client.getClient(), clientFilter.getValue())));
-        filterRow.getCell(clientColumn).setComponent(clientFilter);
-
-        TextField amountFilter = new TextField();
-        amountFilter.setPlaceholder("Filter");
-        amountFilter.setClearButtonVisible(true);
-        amountFilter.setWidth("100%");
-        amountFilter.setValueChangeMode(ValueChangeMode.EAGER);
-        amountFilter.addValueChangeListener(event -> gridListDataView.addFilter(client -> StringUtils
-                .containsIgnoreCase(Double.toString(client.getAmount()), amountFilter.getValue())));
-        filterRow.getCell(amountColumn).setComponent(amountFilter);
-
-        ComboBox<String> statusFilter = new ComboBox<>();
-        statusFilter.setItems(Arrays.asList("Pending", "Success", "Error"));
-        statusFilter.setPlaceholder("Filter");
-        statusFilter.setClearButtonVisible(true);
-        statusFilter.setWidth("100%");
-        statusFilter.addValueChangeListener(
-                event -> gridListDataView.addFilter(client -> areStatusesEqual(client, statusFilter)));
-        filterRow.getCell(statusColumn).setComponent(statusFilter);
-
-        DatePicker dateFilter = new DatePicker();
-        dateFilter.setPlaceholder("Filter");
-        dateFilter.setClearButtonVisible(true);
-        dateFilter.setWidth("100%");
-        dateFilter.addValueChangeListener(
-                event -> gridListDataView.addFilter(client -> areDatesEqual(client, dateFilter)));
-        filterRow.getCell(dateColumn).setComponent(dateFilter);
+//        HeaderRow filterRow = grid.appendHeaderRow();
+//
+//        TextField clientFilter = new TextField();
+//        clientFilter.setPlaceholder("Filter");
+//        clientFilter.setClearButtonVisible(true);
+//        clientFilter.setWidth("100%");
+//        clientFilter.setValueChangeMode(ValueChangeMode.EAGER);
+//        clientFilter.addValueChangeListener(event -> gridListDataView
+//                .addFilter(client -> StringUtils.containsIgnoreCase(client.getClient(), clientFilter.getValue())));
+//        filterRow.getCell(clientColumn).setComponent(clientFilter);
+//
+//        TextField amountFilter = new TextField();
+//        amountFilter.setPlaceholder("Filter");
+//        amountFilter.setClearButtonVisible(true);
+//        amountFilter.setWidth("100%");
+//        amountFilter.setValueChangeMode(ValueChangeMode.EAGER);
+//        amountFilter.addValueChangeListener(event -> gridListDataView.addFilter(client -> StringUtils
+//                .containsIgnoreCase(Double.toString(client.getAmount()), amountFilter.getValue())));
+//        filterRow.getCell(amountColumn).setComponent(amountFilter);
+//
+//        ComboBox<String> statusFilter = new ComboBox<>();
+//        statusFilter.setItems(Arrays.asList("Pending", "Success", "Error"));
+//        statusFilter.setPlaceholder("Filter");
+//        statusFilter.setClearButtonVisible(true);
+//        statusFilter.setWidth("100%");
+//        statusFilter.addValueChangeListener(
+//                event -> gridListDataView.addFilter(client -> areStatusesEqual(client, statusFilter)));
+//        filterRow.getCell(statusColumn).setComponent(statusFilter);
+//
+//        DatePicker dateFilter = new DatePicker();
+//        dateFilter.setPlaceholder("Filter");
+//        dateFilter.setClearButtonVisible(true);
+//        dateFilter.setWidth("100%");
+//        dateFilter.addValueChangeListener(
+//                event -> gridListDataView.addFilter(client -> areDatesEqual(client, dateFilter)));
+//        filterRow.getCell(dateColumn).setComponent(dateFilter);
     }
 
     private boolean areStatusesEqual(Client client, ComboBox<String> statusFilter) {
@@ -200,4 +271,4 @@ public class PrescriptionView extends Div {
 
         return c;
     }
-};
+}

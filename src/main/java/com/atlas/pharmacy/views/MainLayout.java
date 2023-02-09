@@ -8,6 +8,7 @@ import com.atlas.pharmacy.views.empty.EmptyView;
 import com.atlas.pharmacy.views.helloworld.HelloWorldView;
 import com.atlas.pharmacy.views.notetaker.NoteTakerView;
 import com.atlas.pharmacy.views.patient.PatientView;
+import com.atlas.pharmacy.views.prescriber.PrescriberView;
 import com.atlas.pharmacy.views.prescription.PrescriptionView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -175,14 +176,11 @@ public class MainLayout extends AppLayout {
 
                 new MenuItemInfo("Prescription", "la la-prescription", PrescriptionView.class), //
 
+                new MenuItemInfo("Prescriber", "la la-stethoscope", PrescriberView.class), //
+
                 new MenuItemInfo("Drug", "la la-prescription-bottle", DrugView.class), //
 
                 new MenuItemInfo("Note Taker", "la la-edit", NoteTakerView.class), //
-
-                new MenuItemInfo("Empty", "la la-file", EmptyView.class), //
-
-                new MenuItemInfo("Hello World", "la la-globe", HelloWorldView.class), //
-
         };
     }
 

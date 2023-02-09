@@ -1,12 +1,12 @@
 package com.atlas.pharmacy.views.patient;
 
 import com.atlas.pharmacy.data.entity.Patient;
+import com.atlas.pharmacy.data.entity.Prescription;
+import com.atlas.pharmacy.data.service.PRMService;
 import com.atlas.pharmacy.data.service.PatientService;
 import com.atlas.pharmacy.views.MainLayout;
-import com.atlas.pharmacy.views.drug.DrugView;
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.*;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
@@ -22,6 +22,7 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.listbox.ListBox;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -34,6 +35,7 @@ import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -46,9 +48,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.*;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -66,8 +67,10 @@ public class PatientView extends Div implements BeforeEnterObserver {
     private final String PATIENT_ID = "patientID";
     private final String PATIENT_EDIT_ROUTE_TEMPLATE = "patient/%s/edit";
 
+    private final PRMService prmService;
     private final PatientService patientService;
     private final Filters filters;
+    private final Prescriptions prescriptions;
 
     private Patient patient;
     private final Grid<Patient> grid = new Grid<>(Patient.class, false);
@@ -91,11 +94,13 @@ public class PatientView extends Div implements BeforeEnterObserver {
     private TextField allergy;
     private TextField healthCardId;
 
-    public PatientView(PatientService PatientService) {
+    public PatientView(PatientService PatientService, PRMService prmService) {
         this.patientService = PatientService;
+        this.prmService = prmService;
         //setSizeFull();
         addClassNames("patient-view");
 
+        prescriptions = new Prescriptions();
         filters = new Filters(this::refreshGrid);
         VerticalLayout layout = new VerticalLayout(createMobileFilters(), filters, createGrid(), createEditorLayout());
         //layout.setSizeFull();
@@ -123,26 +128,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
             refreshGrid();
         });
 
-        save.addClickListener(e -> {
-            try {
-                if (this.patient == null) {
-                    this.patient = new Patient();
-                }
-                binder.writeBean(this.patient);
-                patientService.update(this.patient);
-                clearForm();
-                refreshGrid();
-                Notification.show("Drug updated successfully!");
-                UI.getCurrent().navigate(DrugView.class);
-            } catch (ObjectOptimisticLockingFailureException exception) {
-                Notification n = Notification.show(
-                        "Error updating the drug. Somebody else has updated the record while you were making changes.");
-                n.setPosition(Notification.Position.MIDDLE);
-                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
-            } catch (ValidationException validationException) {
-                Notification.show("Failed to update the drug. Check again that all values are valid");
-            }
-        });
+        save.addClickListener(e -> savePatient());
 
         newPatient.addClickListener(e -> {
             Dialog dialog = new Dialog();
@@ -161,6 +147,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
     }
 
     private static VerticalLayout createNewPatientDialogLayout() {
+        // TODO finish adding the components
 
         TextField firstNameField = new TextField("First name");
         TextField lastNameField = new TextField("Last name");
@@ -175,8 +162,13 @@ public class PatientView extends Div implements BeforeEnterObserver {
         return dialogLayout;
     }
 
-    private static Button createNewPatientDialogSaveButton(Dialog dialog) {
-        Button saveButton = new Button("Add", e -> dialog.close());
+    private  Button createNewPatientDialogSaveButton(Dialog dialog) {
+        Button saveButton = new Button("Add", e -> {
+
+            savePatient();
+            dialog.close();
+        });
+
         saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
         return saveButton;
@@ -206,6 +198,27 @@ public class PatientView extends Div implements BeforeEnterObserver {
         return mobileFilters;
     }
 
+    private void savePatient() {
+        try {
+            if (patient == null) {
+                patient = new Patient();
+            }
+            binder.writeBean(patient);
+            patientService.update(patient);
+            clearForm();
+            refreshGrid();
+            Notification.show("Patient updated successfully!");
+            UI.getCurrent().navigate(PatientView.class);
+        } catch (ObjectOptimisticLockingFailureException exception) {
+            Notification n = Notification.show(
+                    "Error updating the Patient. Somebody else has updated the record while you were making changes.");
+            n.setPosition(Notification.Position.MIDDLE);
+            n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+        } catch (ValidationException validationException) {
+            Notification.show("Failed to update the patient. Check again that all values are valid");
+        }
+    }
+
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
         Optional<Long> patientId = beforeEnterEvent.getRouteParameters().get(PATIENT_ID).map(Long::parseLong);
@@ -217,12 +230,67 @@ public class PatientView extends Div implements BeforeEnterObserver {
             else {
                 Notification.show(
                         String.format("The requested patient was not found, ID = %s", patientId.get()), 3000,
-                        Notification.Position.BOTTOM_START);
+                        Notification.Position.BOTTOM_START
+                );
                 // when a row is selected but the data is no longer available,
                 // refresh grid
                 refreshGrid();
                 beforeEnterEvent.forwardTo(PatientView.class);
             }
+        }
+    }
+
+    public static class Prescriptions extends VerticalLayout {
+
+        private final ListBox<Prescription> listBox;
+        private final Button refill;
+
+        public Prescriptions() {
+            this.listBox = new ListBox<>();
+
+            this.listBox.setRenderer(new ComponentRenderer<>(rx -> {
+                HorizontalLayout row = new HorizontalLayout();
+                row.setAlignItems(FlexComponent.Alignment.CENTER);
+
+                Avatar avatar = new Avatar();
+                avatar.setName(String.format("%s", rx.getDrug().getGenericName()));
+                //avatar.setImage(rx.getPictureUrl());
+
+                Span name = new Span(rx.getDrug().getGenericName());
+
+                Span days = new Span(String.format("Days (%s)", rx.getActualDaysRemaining().orElse(0L)));
+                days.getStyle()
+                        .set("color", "var(--lumo-secondary-text-color)")
+                        .set("font-size", "var(--lumo-font-size-s)");
+
+                Span qty = new Span(String.format("Qty (%s)", rx.getQuantity()));
+                qty.getStyle()
+                        .set("color", "var(--lumo-secondary-text-color)")
+                        .set("font-size", "var(--lumo-font-size-s)");
+
+                VerticalLayout column = new VerticalLayout(name, qty, days);
+                column.setPadding(false);
+                column.setSpacing(false);
+
+                row.add(avatar, column);
+                row.getStyle().set("line-height", "var(--lumo-line-height-m)");
+                return row;
+            }));
+
+            this.refill = new Button("Refill");
+            add(this.listBox, this.refill);
+            setSizeFull();
+            setJustifyContentMode(JustifyContentMode.CENTER);
+            setDefaultHorizontalComponentAlignment(Alignment.CENTER);
+            getStyle().set("text-align", "center");
+        }
+
+        public void populate(List<Prescription> prescriptions) {
+            if (prescriptions == null || prescriptions.size() < 1) {
+                System.out.println("Null list or empty.");
+                return;
+            }
+            listBox.setItems(prescriptions);
         }
     }
 
@@ -381,7 +449,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
         occupation = new ComboBox<>("Occupation");
         role = new ComboBox<>("Role");
         streetAddress = new TextField("Street Address");
-        province = new TextField("Provice");
+        province = new TextField("Province");
         city = new TextField("City");
         postalCode = new TextField("Postal Code");
         allergy = new TextField("Allergy");
@@ -400,7 +468,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
         tabSheet.add(profile, new FormLayout(firstName, lastName, email, phone, dateOfBirth, streetAddress, province, city, postalCode));
         tabSheet.add(work, new FormLayout(occupation, role));
         tabSheet.add(health, new FormLayout(allergy, healthCardId));
-        tabSheet.add(prescription, new Div()); // TODO ADD PRESCRIPTIONS LIST GRID
+        tabSheet.add(prescription, prescriptions);
 
         editorDiv.add(tabSheet);
         createButtonLayout(editorLayoutDiv);
@@ -430,12 +498,20 @@ public class PatientView extends Div implements BeforeEnterObserver {
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
         grid.addClassNames(LumoUtility.Border.TOP, LumoUtility.BorderColor.CONTRAST_10);
 
-        // when a row is selected or deselected, populate form
+        // when a row is selected or deselected, populate forms
         grid.asSingleSelect().addValueChangeListener(event -> {
             if (event.getValue() != null) {
-                UI.getCurrent().navigate(String.format(PATIENT_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
+                Long id = event.getValue().getId();
+                UI.getCurrent().navigate(String.format(PATIENT_EDIT_ROUTE_TEMPLATE, id));
+                List<Prescription> prescriptionList = prmService.getPrescriptionService()
+                        .findAll()
+                        .stream()
+                        .filter(prescription -> Objects.equals(prescription.getPatient().getId(), id))
+                        .toList();
+                prescriptions.populate(prescriptionList);
             }
             else {
+                prescriptions.populate(Collections.emptyList());
                 clearForm();
                 UI.getCurrent().navigate(PatientView.class);
             }

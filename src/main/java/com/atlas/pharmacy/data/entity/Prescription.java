@@ -1,7 +1,7 @@
 package com.atlas.pharmacy.data.entity;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,16 +17,19 @@ public class Prescription extends AbstractEntity {
     private static final double DISPENSING_FEE = 9.99;
     private static final double ONTARIO_HST = 0.13;
 
-    LocalDate dispenseDate;
+    private LocalDate dispenseDate;
     private String frequency; // ex: take 1 tablet by mouth once a day.
     private double quantity;
     private int refills;
     private int daySupplyDuration;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "patient_id")
     private Patient patient;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "drug_id")
     private Drug drug;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "prescriber_id")
     private Prescriber prescriber;
 
     /**
@@ -57,7 +60,11 @@ public class Prescription extends AbstractEntity {
      * @return Next refill date, otherwise an empty optional.
      */
     public Optional<LocalDate> getNextRefillDate() {
-        if (refills < 1 || dispenseDate == null || daySupplyDuration < 1) return Optional.empty();
-        return Optional.of(dispenseDate.plusDays(daySupplyDuration));
+        if (refills < 1 || dispenseDate == null || daySupplyDuration < 1) {
+            return Optional.empty();
+        }
+        else {
+            return Optional.of(dispenseDate.plusDays(daySupplyDuration));
+        }
     }
 }
