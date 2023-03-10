@@ -29,4 +29,12 @@ public class Drug extends AbstractEntity {
     public Optional<String> getCompleteName() {
         return Optional.of(String.format("%d %s %s", drugIdentificationNumber, brandName, genericName));
     }
+
+    @Override
+    public String toString() {
+        return genericName.concat(" ")
+                .concat(dosage)
+                .concat(" ")
+                .concat(form);
+    }
 }

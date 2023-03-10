@@ -6,7 +6,6 @@ import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Fetch;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -44,5 +43,10 @@ public class Patient extends AbstractEntity {
         else {
             return Optional.of(String.format("%s %s", firstName, lastName));
         }
+    }
+
+    @Override
+    public String toString() {
+        return firstName.concat(" ").concat(lastName);
     }
 }

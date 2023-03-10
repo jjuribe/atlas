@@ -1,6 +1,8 @@
 package com.atlas.pharmacy.data.service;
 
 import com.atlas.pharmacy.data.entity.Patient;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +36,10 @@ public class PatientService {
 
     public Page<Patient> list(Pageable pageable, Specification<Patient> filter) {
         return repository.findAll(filter, pageable);
+    }
+
+    public List<Patient> findAll() {
+        return repository.findAll();
     }
 
     public int count() {

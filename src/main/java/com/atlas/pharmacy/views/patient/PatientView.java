@@ -1,6 +1,8 @@
 package com.atlas.pharmacy.views.patient;
 
+import com.atlas.pharmacy.data.entity.Drug;
 import com.atlas.pharmacy.data.entity.Patient;
+import com.atlas.pharmacy.data.entity.Prescriber;
 import com.atlas.pharmacy.data.entity.Prescription;
 import com.atlas.pharmacy.data.service.PRMService;
 import com.atlas.pharmacy.data.service.PatientService;
@@ -61,8 +63,8 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 @Uses(Icon.class)
 public class PatientView extends Div implements BeforeEnterObserver {
 
-    public static final String[] OCCUPATIONS = { "Insurance Clerk", "Mortarman", "Beer Coil Cleaner", "Scale Attendant" };
-    public static final String[] ROLES = { "Worker", "Supervisor", "Manager", "External" };
+    public static final String[] OCCUPATIONS = {"Insurance Clerk", "Mortarman", "Beer Coil Cleaner", "Scale Attendant"};
+    public static final String[] ROLES = {"Worker", "Supervisor", "Manager", "External"};
 
     private final String PATIENT_ID = "patientID";
     private final String PATIENT_EDIT_ROUTE_TEMPLATE = "patient/%s/edit";
@@ -74,7 +76,6 @@ public class PatientView extends Div implements BeforeEnterObserver {
 
     private Patient patient;
     private final Grid<Patient> grid = new Grid<>(Patient.class, false);
-    private final Button newPatient = new Button("New Patient");
     private final Button delete = new Button("Delete");
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
@@ -100,7 +101,11 @@ public class PatientView extends Div implements BeforeEnterObserver {
         //setSizeFull();
         addClassNames("patient-view");
 
-        prescriptions = new Prescriptions();
+        prescriptions = new Prescriptions(prmService, () -> {
+            clearForm();
+            refreshGrid();
+        });
+
         filters = new Filters(this::refreshGrid);
         VerticalLayout layout = new VerticalLayout(createMobileFilters(), filters, createGrid(), createEditorLayout());
         //layout.setSizeFull();
@@ -114,6 +119,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
         binder.bindInstanceFields(this);
 
         cancel.addClickListener(e -> {
+            prescriptions.clear();
             clearForm();
             refreshGrid();
         });
@@ -124,54 +130,12 @@ public class PatientView extends Div implements BeforeEnterObserver {
             }
             binder.removeBean();
             patientService.delete(patient.getId());
+            prescriptions.clear();
             clearForm();
             refreshGrid();
         });
 
         save.addClickListener(e -> savePatient());
-
-        newPatient.addClickListener(e -> {
-            Dialog dialog = new Dialog();
-            dialog.setHeaderTitle("New patient");
-
-            VerticalLayout dialogLayout = createNewPatientDialogLayout();
-            dialog.add(dialogLayout);
-
-            Button saveButton = createNewPatientDialogSaveButton(dialog);
-            Button cancelButton = new Button("Cancel", cancel -> dialog.close());
-            dialog.getFooter().add(cancelButton);
-            dialog.getFooter().add(saveButton);
-
-            dialog.open();
-        });
-    }
-
-    private static VerticalLayout createNewPatientDialogLayout() {
-        // TODO finish adding the components
-
-        TextField firstNameField = new TextField("First name");
-        TextField lastNameField = new TextField("Last name");
-
-        VerticalLayout dialogLayout = new VerticalLayout(firstNameField,
-                lastNameField);
-        dialogLayout.setPadding(false);
-        dialogLayout.setSpacing(false);
-        dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
-        dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
-
-        return dialogLayout;
-    }
-
-    private  Button createNewPatientDialogSaveButton(Dialog dialog) {
-        Button saveButton = new Button("Add", e -> {
-
-            savePatient();
-            dialog.close();
-        });
-
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        return saveButton;
     }
 
     private HorizontalLayout createMobileFilters() {
@@ -205,6 +169,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
             }
             binder.writeBean(patient);
             patientService.update(patient);
+            prescriptions.clear();
             clearForm();
             refreshGrid();
             Notification.show("Patient updated successfully!");
@@ -240,13 +205,33 @@ public class PatientView extends Div implements BeforeEnterObserver {
         }
     }
 
-    public static class Prescriptions extends VerticalLayout {
+    public static final class Prescriptions extends VerticalLayout {
+
+        private final PRMService prmService;
+        private final Runnable func;
+        private final BeanValidationBinder<Prescription> binder;
 
         private final ListBox<Prescription> listBox;
         private final Button refill;
+        private final Button create;
 
-        public Prescriptions() {
+        private final ComboBox<Patient> patient = new ComboBox<>("Patients");
+        private final ComboBox<Drug> drug = new ComboBox<>("Drugs");
+        private final ComboBox<Prescriber> prescriber = new ComboBox<>("Prescribers");
+        private final DatePicker dispenseDate = new DatePicker("Dispense Date");
+        private final TextField frequency = new TextField("Frequency");
+        private final TextField quantity = new TextField("Quantity");
+        private final TextField refills = new TextField("Refills");
+        private final TextField daySupplyDuration = new TextField("Day Supply");
+
+        private Prescription prescription;
+
+        public Prescriptions(PRMService prmService, Runnable func) {
+            this.prmService = prmService;
+            this.func = func;
             this.listBox = new ListBox<>();
+            this.binder = new BeanValidationBinder<>(Prescription.class);
+            this.binder.bindInstanceFields(this);
 
             this.listBox.setRenderer(new ComponentRenderer<>(rx -> {
                 HorizontalLayout row = new HorizontalLayout();
@@ -278,23 +263,98 @@ public class PatientView extends Div implements BeforeEnterObserver {
             }));
 
             this.refill = new Button("Refill");
-            add(this.listBox, this.refill);
+            this.create = new Button("New Prescription");
+
+            this.create.addClickListener(event -> {
+                Dialog dialog = new Dialog();
+                dialog.setHeaderTitle("New Prescription");
+
+                VerticalLayout dialogLayout = createNewPrescriptionDialogLayout();
+                dialog.add(dialogLayout);
+
+                Button saveButton = createNewPrescriptionDialogSaveButton(dialog);
+                Button cancelButton = new Button("Cancel", cancel -> dialog.close());
+                dialog.getFooter().add(cancelButton);
+                dialog.getFooter().add(saveButton);
+
+                dialog.open();
+            });
+
+
+            add(this.listBox, this.refill, create);
             setSizeFull();
             setJustifyContentMode(JustifyContentMode.CENTER);
             setDefaultHorizontalComponentAlignment(Alignment.CENTER);
             getStyle().set("text-align", "center");
         }
 
+        private VerticalLayout createNewPrescriptionDialogLayout() {
+            Patient p = listBox.getListDataView()
+                    .getItems()
+                    .findFirst()
+                    .map(Prescription::getPatient)
+                    .orElseThrow();
+            patient.setItems(p);
+            patient.setValue(p);
+
+            List<Drug> drugs = prmService.getDrugService().findAll();
+            drug.setItems(drugs);
+
+            List<Prescriber> prescribers = prmService.getPrescriberService().findAll();
+            prescriber.setItems(prescribers);
+
+            VerticalLayout dialogLayout = new VerticalLayout(patient, drug, prescriber, dispenseDate, frequency, quantity, refills, daySupplyDuration);
+            dialogLayout.setPadding(false);
+            dialogLayout.setSpacing(false);
+            dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
+            dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
+
+            return dialogLayout;
+        }
+
+        private Button createNewPrescriptionDialogSaveButton(Dialog dialog) {
+            Button saveButton = new Button("Add", e -> {
+                savePrescription();
+                clear();
+                func.run();
+                dialog.close();
+            });
+            saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+            return saveButton;
+        }
+
+        private void savePrescription() {
+            try {
+                if (prescription == null) {
+                    prescription = new Prescription();
+                }
+                binder.writeBean(prescription);
+                prmService.getPrescriptionService().update(prescription);
+                Notification.show("Saved prescription!");
+                UI.getCurrent().navigate(PatientView.class);
+            } catch (ObjectOptimisticLockingFailureException exception) {
+                Notification n = Notification.show(
+                        "Error saving prescription.");
+                n.setPosition(Notification.Position.MIDDLE);
+                n.addThemeVariants(NotificationVariant.LUMO_ERROR);
+            } catch (ValidationException validationException) {
+                Notification.show("Failed to save the prescription. Check again that all values are valid");
+            }
+        }
+
+        public void clear() {
+            listBox.setItems(Collections.emptyList());
+        }
+
         public void populate(List<Prescription> prescriptions) {
-            if (prescriptions == null || prescriptions.size() < 1) {
-                System.out.println("Null list or empty.");
+            if (prescriptions == null) {
                 return;
             }
             listBox.setItems(prescriptions);
         }
     }
 
-    public static class Filters extends Div implements Specification<Patient> {
+    public static final class Filters extends Div implements Specification<Patient> {
 
         private final TextField name = new TextField("Name");
         private final TextField phone = new TextField("Phone");
@@ -511,7 +571,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
                 prescriptions.populate(prescriptionList);
             }
             else {
-                prescriptions.populate(Collections.emptyList());
+                prescriptions.clear();
                 clearForm();
                 UI.getCurrent().navigate(PatientView.class);
             }
@@ -526,7 +586,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
         delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
         cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        buttonLayout.add(save, cancel, delete, newPatient);
+        buttonLayout.add(save, cancel, delete);
         editorLayoutDiv.add(buttonLayout);
     }
 

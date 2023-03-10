@@ -49,8 +49,7 @@ public class Prescription extends AbstractEntity {
      * @return Days remaining on the prescription, otherwise an empty optional.
      */
     public Optional<Long> getActualDaysRemaining() {
-        return getNextRefillDate()
-                .map(next -> next.toEpochDay() - LocalDate.now().toEpochDay());
+        return getNextRefillDate().map(next -> next.toEpochDay() - LocalDate.now().toEpochDay());
     }
 
     /**
@@ -66,5 +65,10 @@ public class Prescription extends AbstractEntity {
         else {
             return Optional.of(dispenseDate.plusDays(daySupplyDuration));
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Rx ID: ".concat(String.valueOf(getId()));
     }
 }

@@ -26,4 +26,9 @@ public class Prescriber extends AbstractEntity {
     public Optional<String> getCompleteName() {
         return Optional.of(String.format("%d %s %s", licenseIdentificationNumber, firstName, lastName));
     }
+
+    @Override
+    public String toString() {
+        return firstName.concat(" ").concat(lastName);
+    }
 }
