@@ -225,6 +225,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
         private final TextField daySupplyDuration = new TextField("Day Supply");
 
         private Prescription prescription;
+        private Patient selectedPatient;
 
         public Prescriptions(PRMService prmService, Runnable func) {
             this.prmService = prmService;
@@ -264,7 +265,6 @@ public class PatientView extends Div implements BeforeEnterObserver {
 
             this.refill = new Button("Refill");
             this.create = new Button("New Prescription");
-
             this.create.addClickListener(event -> {
                 Dialog dialog = new Dialog();
                 dialog.setHeaderTitle("New Prescription");
@@ -280,8 +280,8 @@ public class PatientView extends Div implements BeforeEnterObserver {
                 dialog.open();
             });
 
-
-            add(this.listBox, this.refill, create);
+            HorizontalLayout buttonLayout = new HorizontalLayout(refill, create);
+            add(listBox, buttonLayout);
             setSizeFull();
             setJustifyContentMode(JustifyContentMode.CENTER);
             setDefaultHorizontalComponentAlignment(Alignment.CENTER);
@@ -289,13 +289,8 @@ public class PatientView extends Div implements BeforeEnterObserver {
         }
 
         private VerticalLayout createNewPrescriptionDialogLayout() {
-            Patient p = listBox.getListDataView()
-                    .getItems()
-                    .findFirst()
-                    .map(Prescription::getPatient)
-                    .orElseThrow();
-            patient.setItems(p);
-            patient.setValue(p);
+            patient.setItems(selectedPatient);
+            patient.setValue(selectedPatient);
 
             List<Drug> drugs = prmService.getDrugService().findAll();
             drug.setItems(drugs);
@@ -351,6 +346,10 @@ public class PatientView extends Div implements BeforeEnterObserver {
                 return;
             }
             listBox.setItems(prescriptions);
+        }
+
+        public void setSelectedPatient(Patient patient) {
+            this.selectedPatient = patient;
         }
     }
 
@@ -569,6 +568,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
                         .filter(prescription -> Objects.equals(prescription.getPatient().getId(), id))
                         .toList();
                 prescriptions.populate(prescriptionList);
+                prescriptions.setSelectedPatient(event.getValue());
             }
             else {
                 prescriptions.clear();
