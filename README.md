@@ -105,3 +105,6 @@ If you want to remove your whole deployment and start over, run
 ```
 kubectl delete -f kubernetes.yaml
 ```
+
+--
+
