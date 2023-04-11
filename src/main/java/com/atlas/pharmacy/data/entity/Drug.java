@@ -23,6 +23,7 @@ public class Drug extends AbstractEntity {
     private String form;
     private double unitCost;
     private double stockQuantity;
+
     @OneToMany
     private List<Prescription> prescriptions = new ArrayList<>();
 
