@@ -25,8 +25,8 @@ import java.time.LocalDate;
 @PermitAll
 public class PrescriptionView extends Div {
 
-    private static final String USER_PICTURE = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png";
     private final PRMService prmService;
+    private PrescriptionSearchBar searchBar;
     private Grid<Prescription> prescriptionGridPro;
     private GridLazyDataView<Prescription> prescriptionGridListDataView;
     private Grid.Column<Prescription> patientColumn;
@@ -45,8 +45,9 @@ public class PrescriptionView extends Div {
         this.prmService = prmService;
         addClassName("prescription-view");
         setSizeFull();
+        createSearchBar();
         createGrid();
-        add(prescriptionGridPro);
+        add(searchBar, prescriptionGridPro);
     }
 
     private void createGrid() {
@@ -54,18 +55,37 @@ public class PrescriptionView extends Div {
         addColumnsToGrid();
     }
 
+
     private void createGridComponent() {
         prescriptionGridPro = new Grid<>();
         prescriptionGridPro.setSelectionMode(SelectionMode.MULTI);
         prescriptionGridPro.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COLUMN_BORDERS);
         prescriptionGridPro.setHeight("100%");
 
+        updateGridDataProvider("");
+    }
+
+    public void updateGridDataProvider(String searchString) {
         prescriptionGridListDataView = prescriptionGridPro.setItems(query -> {
             return prmService.getPrescriptionService().list(
-                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query))
+                    PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)),
+                    searchString
             ).stream();
         });
     }
+
+    private void createSearchBar() {
+        searchBar = new PrescriptionSearchBar();
+        searchBar.getSearchField().addValueChangeListener(event -> {
+            String searchText = event.getValue();
+            updateGridDataProvider(searchText);
+        });
+        searchBar.getSearchButton().addClickListener(event -> {
+            String searchText = searchBar.getSearchField().getValue();
+            updateGridDataProvider(searchText);
+        });
+    }
+
 
     private void addColumnsToGrid() {
         createPatientColumn();
