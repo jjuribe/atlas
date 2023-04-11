@@ -2,14 +2,11 @@ package com.atlas.pharmacy.views;
 
 import com.atlas.pharmacy.data.entity.User;
 import com.atlas.pharmacy.security.AuthenticatedUser;
-import com.atlas.pharmacy.views.dashboard.DashboardView;
 import com.atlas.pharmacy.views.drug.DrugView;
-import com.atlas.pharmacy.views.empty.EmptyView;
-import com.atlas.pharmacy.views.helloworld.HelloWorldView;
-import com.atlas.pharmacy.views.notetaker.NoteTakerView;
 import com.atlas.pharmacy.views.patient.PatientView;
 import com.atlas.pharmacy.views.prescriber.PrescriberView;
 import com.atlas.pharmacy.views.prescription.PrescriptionView;
+import com.atlas.pharmacy.views.root.RootView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -170,7 +167,7 @@ public class MainLayout extends AppLayout {
 
     private MenuItemInfo[] createMenuItems() {
         return new MenuItemInfo[]{ //
-                new MenuItemInfo("Dashboard", "la la-chart-bar", DashboardView.class), //
+                new MenuItemInfo("Home", "la la-chart-bar", RootView.class), //
 
                 new MenuItemInfo("Patient", "la la-user-check", PatientView.class), //
 
@@ -179,8 +176,6 @@ public class MainLayout extends AppLayout {
                 new MenuItemInfo("Prescriber", "la la-stethoscope", PrescriberView.class), //
 
                 new MenuItemInfo("Drug", "la la-prescription-bottle", DrugView.class), //
-
-                new MenuItemInfo("Note Taker", "la la-edit", NoteTakerView.class), //
         };
     }
 

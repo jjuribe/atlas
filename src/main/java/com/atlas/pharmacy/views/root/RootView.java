@@ -1,4 +1,4 @@
-package com.atlas.pharmacy.views.empty;
+package com.atlas.pharmacy.views.root;
 
 import com.atlas.pharmacy.views.MainLayout;
 import com.vaadin.flow.component.html.H2;
@@ -9,20 +9,20 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 
-@PageTitle("Empty")
-@Route(value = "empty", layout = MainLayout.class)
+@PageTitle("Root")
+@Route(value = "", layout = MainLayout.class)
 @PermitAll
-public class EmptyView extends VerticalLayout {
+public class RootView extends VerticalLayout {
 
-    public EmptyView() {
+    public RootView() {
         setSpacing(false);
 
-        Image img = new Image("images/empty-plant.png", "placeholder plant");
+        Image img = new Image("icons/icon.png", "atlas-greek-god");
         img.setWidth("200px");
         add(img);
 
-        add(new H2("This place intentionally left empty"));
-        add(new Paragraph("It’s a place where you can grow your own UI 🤗"));
+        add(new H2("Atlas Pharmaceuticals"));
+        add(new Paragraph("Simply built with Java ☕ and ❤️"));
 
         setSizeFull();
         setJustifyContentMode(JustifyContentMode.CENTER);

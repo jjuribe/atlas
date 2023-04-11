@@ -51,6 +51,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import java.time.LocalDate;
 import java.util.*;
 
 import org.springframework.data.domain.PageRequest;
@@ -264,6 +265,14 @@ public class PatientView extends Div implements BeforeEnterObserver {
             }));
 
             this.refill = new Button("Refill");
+            this.refill.addClickListener(e -> {
+                Prescription selectedPrescription = listBox.getValue();
+                if (selectedPrescription != null) {
+                    try { handleRefill(selectedPrescription); } catch (ValidationException ex) { }
+                } else {
+                    Notification.show("Please select a prescription to refill");
+                }
+            });
             this.create = new Button("New Prescription");
             this.create.addClickListener(event -> {
                 Dialog dialog = new Dialog();
@@ -286,6 +295,39 @@ public class PatientView extends Div implements BeforeEnterObserver {
             setJustifyContentMode(JustifyContentMode.CENTER);
             setDefaultHorizontalComponentAlignment(Alignment.CENTER);
             getStyle().set("text-align", "center");
+        }
+
+        private void handleRefill(Prescription selectedPrescription) throws ValidationException {
+            // Check if days are left on rx, no earlier refill
+            boolean hasDaysRemaining = selectedPrescription.getActualDaysRemaining()
+                    .map(d -> d > 0)
+                    .orElse(false);
+
+            if (hasDaysRemaining) {
+                Notification.show("Day remaining greater than zero.");
+                return;
+            }
+
+            // Check if the prescription has any remaining refills
+            if (selectedPrescription.getRefills() > 0) {
+                // Decrement the number of refills by 1
+                selectedPrescription.setRefills(selectedPrescription.getRefills() - 1);
+
+                // Update the dispense date to the current date
+                selectedPrescription.setDispenseDate(LocalDate.now());
+                binder.writeBean(selectedPrescription);
+
+                // Save the updated prescription
+                prmService.getPrescriptionService().update(selectedPrescription);
+                UI.getCurrent().navigate(PatientView.class);
+                clear();
+                Notification.show("Prescription refilled successfully!");
+            } else {
+                Notification.show("No remaining refills for this prescription.");
+            }
+
+            // Refresh the prescription list
+            func.run();
         }
 
         private VerticalLayout createNewPrescriptionDialogLayout() {

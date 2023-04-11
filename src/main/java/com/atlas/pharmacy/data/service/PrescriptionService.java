@@ -39,6 +39,14 @@ public class PrescriptionService {
         return repository.findAll(filter, pageable);
     }
 
+    public Page<Prescription> list(Pageable pageable, String searchString) {
+        if (searchString.isEmpty()) {
+            return repository.findAll(pageable);
+        } else {
+            return repository.findByPatientNameContainingIgnoreCase(searchString, pageable);
+        }
+    }
+
     public List<Prescription> findAll() {
         return repository.findAll();
     }
