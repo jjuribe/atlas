@@ -2,6 +2,7 @@ package com.atlas.pharmacy.views;
 
 import com.atlas.pharmacy.data.entity.User;
 import com.atlas.pharmacy.security.AuthenticatedUser;
+import com.atlas.pharmacy.views.dash.DashboardView;
 import com.atlas.pharmacy.views.drug.DrugView;
 import com.atlas.pharmacy.views.patient.PatientView;
 import com.atlas.pharmacy.views.prescriber.PrescriberView;
@@ -167,7 +168,9 @@ public class MainLayout extends AppLayout {
 
     private MenuItemInfo[] createMenuItems() {
         return new MenuItemInfo[]{ //
-                new MenuItemInfo("Home", "la la-chart-bar", RootView.class), //
+                new MenuItemInfo("Home", "la la-rocket", RootView.class), //
+
+                new MenuItemInfo("Enterprise Dashboard", "la la-chart-bar", DashboardView.class), //
 
                 new MenuItemInfo("Patient", "la la-user-check", PatientView.class), //
 

@@ -43,18 +43,19 @@ public class DrugView extends Div implements BeforeEnterObserver {
     private final Button delete = new Button("Delete");
     private final Button cancel = new Button("Cancel");
     private final Button save = new Button("Save");
+
+    private TextField searchField;
+    private Button searchButton;
+
     private final BeanValidationBinder<Drug> binder;
     private final PRMService prmService;
 
-    private TextField drugIdentificationNumber;
-    private TextField dosage;
-    private TextField manufacturer;
-    private TextField brandName;
-    private TextField genericName;
-    private TextField description;
-    private TextField form;
-    private TextField unitCost;
-    private TextField stockQuantity;
+    private TextField drug_code;
+    private TextField dosage_unit;
+    private TextField dosage_value;
+    private TextField ingredient_name;
+    private TextField strength;
+    private TextField strength_unit;
 
     private Drug drug;
 
@@ -71,26 +72,25 @@ public class DrugView extends Div implements BeforeEnterObserver {
         add(splitLayout);
 
         // Configure Grid
-        grid.addColumn("drugIdentificationNumber").setAutoWidth(true);
-        grid.addColumn("dosage").setAutoWidth(true);
-        grid.addColumn("manufacturer").setAutoWidth(true);
-        grid.addColumn("brandName").setAutoWidth(true);
-        grid.addColumn("genericName").setAutoWidth(true);
-        grid.addColumn("description").setAutoWidth(true);
-        grid.addColumn("form").setAutoWidth(true);
-        grid.addColumn("unitCost").setAutoWidth(true);
-        grid.addColumn("stockQuantity").setAutoWidth(true);
+        grid.addColumn("drug_code").setAutoWidth(true);
+        grid.addColumn("dosage_unit").setAutoWidth(true);
+        grid.addColumn("dosage_value").setAutoWidth(true);
+        grid.addColumn("ingredient_name").setAutoWidth(true);
+        grid.addColumn("strength").setAutoWidth(true);
+        grid.addColumn("strength_unit").setAutoWidth(true);
 
-        grid.setItems(query ->
-                prmService.getDrugService().list(
-                                PageRequest.of(
-                                        query.getPage(),
-                                        query.getPageSize(),
-                                        VaadinSpringDataHelpers.toSpringDataSort(query)
-                                )
-                        )
-                        .stream()
-        );
+        grid.setItems(prmService.getDrugService().fetchDrugs());
+
+//        grid.setItems(query ->
+//                prmService.getDrugService().list(
+//                                PageRequest.of(
+//                                        query.getPage(),
+//                                        query.getPageSize(),
+//                                        VaadinSpringDataHelpers.toSpringDataSort(query)
+//                                )
+//                        )
+//                        .stream()
+//        );
 
         grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 
@@ -175,17 +175,19 @@ public class DrugView extends Div implements BeforeEnterObserver {
 
         FormLayout formLayout = new FormLayout();
 
-        drugIdentificationNumber = new TextField("DIN");
-        dosage = new TextField("Dosage");
-        manufacturer = new TextField("Manufacturer");
-        brandName = new TextField("Brand Name");
-        genericName = new TextField("Generic Name");
-        description = new TextField("Description");
-        form = new TextField("Form");
-        unitCost = new TextField("Unit Cost");
-        stockQuantity = new TextField("Stock Quantity");
+        searchField = new TextField("Search by drug code or ingredient name");
+        searchButton = new Button("Search");
+        searchButton.addClickListener(e -> searchDrugs());
+        formLayout.add(searchField, searchButton);
 
-        formLayout.add(drugIdentificationNumber, dosage, manufacturer, brandName, genericName, description, form, unitCost, stockQuantity);
+        drug_code = new TextField("Drug Code");
+        dosage_unit = new TextField("Dosage Unit");
+        dosage_value = new TextField("Dosage value");
+        ingredient_name = new TextField("Ingredient Name");
+        strength = new TextField("Strength");
+        strength_unit = new TextField("Strength Unit");
+
+        formLayout.add(drug_code, dosage_unit, dosage_value, ingredient_name, strength, strength_unit);
         editorDiv.add(formLayout);
         createButtonLayout(editorLayoutDiv);
         splitLayout.addToSecondary(editorLayoutDiv);
@@ -214,5 +216,14 @@ public class DrugView extends Div implements BeforeEnterObserver {
     private void populateForm(Drug value) {
         this.drug = value;
         binder.readBean(this.drug);
+    }
+
+    private void searchDrugs() {
+        String query = searchField.getValue();
+        if (query.isEmpty()) {
+            grid.setItems(prmService.getDrugService().fetchDrugs());
+        } else {
+            grid.setItems(prmService.getDrugService().searchDrugs(query));
+        }
     }
 }

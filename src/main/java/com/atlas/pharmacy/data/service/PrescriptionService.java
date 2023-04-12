@@ -7,7 +7,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -17,6 +19,19 @@ public class PrescriptionService {
 
     public PrescriptionService(PrescriptionRepository repository) {
         this.repository = repository;
+    }
+
+    public Map<String, Long> countPrescriptionsByDrug() {
+        List<Object[]> results = repository.countPrescriptionsByDrug();
+        Map<String, Long> prescriptionsByDrug = new HashMap<>();
+
+        for (Object[] result : results) {
+            String drugName = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            prescriptionsByDrug.put(drugName, count);
+        }
+
+        return prescriptionsByDrug;
     }
 
     public Optional<Prescription> get(Long id) {

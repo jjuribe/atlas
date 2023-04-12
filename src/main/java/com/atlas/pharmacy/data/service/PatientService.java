@@ -2,7 +2,9 @@ package com.atlas.pharmacy.data.service;
 
 import com.atlas.pharmacy.data.entity.Patient;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +18,19 @@ public class PatientService {
 
     public PatientService(PatientRepository repository) {
         this.repository = repository;
+    }
+
+    public Map<String, Long> countPatientsByOccupation() {
+        List<Object[]> results = repository.countPatientsByOccupation();
+        Map<String, Long> patientsByOccupation = new HashMap<>();
+
+        for (Object[] result : results) {
+            String occupation = (String) result[0];
+            Long count = ((Number) result[1]).longValue();
+            patientsByOccupation.put(occupation, count);
+        }
+
+        return patientsByOccupation;
     }
 
     public Optional<Patient> get(Long id) {
