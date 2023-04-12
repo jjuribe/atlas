@@ -35,8 +35,12 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.binder.BeanValidationBinder;
-import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.data.binder.*;
+import com.vaadin.flow.data.converter.Converter;
+import com.vaadin.flow.data.binder.ValueContext;
+import com.vaadin.flow.data.converter.StringToDoubleConverter;
+import com.vaadin.flow.data.converter.StringToIntegerConverter;
+import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -211,13 +215,16 @@ public class PatientView extends Div implements BeforeEnterObserver {
         private final PRMService prmService;
         private final Runnable func;
         private final BeanValidationBinder<Prescription> binder;
+        private final BeanValidationBinder<Drug> drugBinder;
 
         private final ListBox<Prescription> listBox;
         private final Button refill;
         private final Button create;
 
+        private Drug selectedDrug;
+
         private final ComboBox<Patient> patient = new ComboBox<>("Patients");
-        private final ComboBox<Drug> drug = new ComboBox<>("Drugs");
+        private final TextField drug = new TextField("Drug");
         private final ComboBox<Prescriber> prescriber = new ComboBox<>("Prescribers");
         private final DatePicker dispenseDate = new DatePicker("Dispense Date");
         private final TextField frequency = new TextField("Frequency");
@@ -233,17 +240,45 @@ public class PatientView extends Div implements BeforeEnterObserver {
             this.func = func;
             this.listBox = new ListBox<>();
             this.binder = new BeanValidationBinder<>(Prescription.class);
-            this.binder.bindInstanceFields(this);
+            //this.binder.bindInstanceFields(this);
+            this.drugBinder = new BeanValidationBinder<>(Drug.class);
+            //this.drug.setReadOnly(true);
+
+            binder.forField(patient).bind(Prescription::getPatient, Prescription::setPatient);
+            binder.forField(prescriber).bind(Prescription::getPrescriber, Prescription::setPrescriber);
+            binder.forField(dispenseDate).bind(Prescription::getDispenseDate, Prescription::setDispenseDate);
+            binder.forField(frequency).bind(Prescription::getFrequency, Prescription::setFrequency);
+            binder.forField(quantity).withConverter(new StringToDoubleConverter("Must be a double")).bind(Prescription::getQuantity, Prescription::setQuantity);
+            binder.forField(refills).withConverter(new StringToIntegerConverter("Must be an integer")).bind(Prescription::getRefills, Prescription::setRefills);
+            binder.forField(daySupplyDuration).withConverter(new StringToIntegerConverter("Must be an integer")).bind(Prescription::getDaySupplyDuration, Prescription::setDaySupplyDuration);
+
+            Converter<String, Drug> drugConverter = new Converter<>() {
+                @Override
+                public Result<Drug> convertToModel(String value, ValueContext context) {
+                    if (selectedDrug != null && selectedDrug.getIngredient_name().equals(value)) {
+                        return Result.ok(selectedDrug);
+                    } else {
+                        return Result.error("Invalid drug selection");
+                    }
+                }
+
+                @Override
+                public String convertToPresentation(Drug value, ValueContext context) {
+                    return value != null ? value.getIngredient_name() : "";
+                }
+            };
+
+            binder.forField(drug).withConverter(drugConverter).bind("drug");
 
             this.listBox.setRenderer(new ComponentRenderer<>(rx -> {
                 HorizontalLayout row = new HorizontalLayout();
                 row.setAlignItems(FlexComponent.Alignment.CENTER);
 
                 Avatar avatar = new Avatar();
-                avatar.setName(String.format("%s", rx.getDrug().getGenericName()));
+                avatar.setName(String.format("%s", rx.getDrug().getIngredient_name()));
                 //avatar.setImage(rx.getPictureUrl());
 
-                Span name = new Span(rx.getDrug().getGenericName());
+                Span name = new Span(rx.getDrug().getIngredient_name());
 
                 Span days = new Span(String.format("Days (%s)", rx.getActualDaysRemaining().orElse(0L)));
                 days.getStyle()
@@ -268,7 +303,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
             this.refill.addClickListener(e -> {
                 Prescription selectedPrescription = listBox.getValue();
                 if (selectedPrescription != null) {
-                    try { handleRefill(selectedPrescription); } catch (ValidationException ex) { }
+                    handleRefill(selectedPrescription);
                 } else {
                     Notification.show("Please select a prescription to refill");
                 }
@@ -297,7 +332,7 @@ public class PatientView extends Div implements BeforeEnterObserver {
             getStyle().set("text-align", "center");
         }
 
-        private void handleRefill(Prescription selectedPrescription) throws ValidationException {
+        private void handleRefill(Prescription selectedPrescription) {
             // Check if days are left on rx, no earlier refill
             boolean hasDaysRemaining = selectedPrescription.getActualDaysRemaining()
                     .map(d -> d > 0)
@@ -315,8 +350,6 @@ public class PatientView extends Div implements BeforeEnterObserver {
 
                 // Update the dispense date to the current date
                 selectedPrescription.setDispenseDate(LocalDate.now());
-                binder.writeBean(selectedPrescription);
-
                 // Save the updated prescription
                 prmService.getPrescriptionService().update(selectedPrescription);
                 UI.getCurrent().navigate(PatientView.class);
@@ -334,19 +367,66 @@ public class PatientView extends Div implements BeforeEnterObserver {
             patient.setItems(selectedPatient);
             patient.setValue(selectedPatient);
 
-            List<Drug> drugs = prmService.getDrugService().findAll();
-            drug.setItems(drugs);
+            Dialog drugSelectionDialog = createDrugSelectionDialog();
+            Button selectDrugButton = new Button("Select Drug", e -> drugSelectionDialog.open());
+            VerticalLayout drugLayout = new VerticalLayout(drug, selectDrugButton);
 
             List<Prescriber> prescribers = prmService.getPrescriberService().findAll();
             prescriber.setItems(prescribers);
 
-            VerticalLayout dialogLayout = new VerticalLayout(patient, drug, prescriber, dispenseDate, frequency, quantity, refills, daySupplyDuration);
+            VerticalLayout dialogLayout = new VerticalLayout(patient, drugLayout, prescriber, dispenseDate, frequency, quantity, refills, daySupplyDuration);
             dialogLayout.setPadding(false);
             dialogLayout.setSpacing(false);
             dialogLayout.setAlignItems(FlexComponent.Alignment.STRETCH);
             dialogLayout.getStyle().set("width", "18rem").set("max-width", "100%");
 
             return dialogLayout;
+        }
+
+        private Dialog createDrugSelectionDialog() {
+            Dialog drugSelectionDialog = new Dialog();
+            drugSelectionDialog.setCloseOnOutsideClick(false);
+            drugSelectionDialog.setCloseOnEsc(false);
+
+            Grid<Drug> drugGrid = new Grid<>(Drug.class);
+            drugGrid.setColumns("drug_code", "dosage_unit", "dosage_value", "ingredient_name", "strength", "strength_unit");
+
+            // Fetch the list of drugs and set it as the items for the drugGrid
+            List<Drug> drugs = prmService.getDrugService().fetchDrugs();
+            System.out.println(drugs);
+            drugGrid.setItems(DataProvider.ofCollection(drugs));
+
+            drugGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+
+            Button selectButton = new Button("Select", e -> {
+                selectedDrug = drugGrid.asSingleSelect().getValue();
+                if (selectedDrug != null) {
+                    updateDrugTextField();
+                    drugSelectionDialog.close();
+                }
+            });
+
+            Button cancelButton = new Button("Cancel", e -> drugSelectionDialog.close());
+
+            HorizontalLayout buttonLayout = new HorizontalLayout(selectButton, cancelButton);
+
+            VerticalLayout dialogLayout = new VerticalLayout(drugGrid, buttonLayout);
+
+            // Set the dimensions of the dialogLayout
+            dialogLayout.setWidth("700px");
+            dialogLayout.setHeight("600px");
+
+            drugSelectionDialog.add(dialogLayout);
+
+            return drugSelectionDialog;
+        }
+
+        private void updateDrugTextField() {
+            if (selectedDrug != null) {
+                drug.setValue(selectedDrug.getIngredient_name());
+            } else {
+                drug.clear();
+            }
         }
 
         private Button createNewPrescriptionDialogSaveButton(Dialog dialog) {
@@ -366,6 +446,13 @@ public class PatientView extends Div implements BeforeEnterObserver {
                     prescription = new Prescription();
                 }
                 binder.writeBean(prescription);
+
+                // Save the selected drug before setting it to the prescription
+                if (selectedDrug != null) {
+                    Drug savedDrug = prmService.getDrugService().update(selectedDrug);
+                    prescription.setDrug(savedDrug); // Set the saved drug to the prescription
+                }
+
                 prmService.getPrescriptionService().update(prescription);
                 Notification.show("Saved prescription!");
                 UI.getCurrent().navigate(PatientView.class);

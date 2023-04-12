@@ -38,10 +38,10 @@ public class Prescription extends AbstractEntity {
      *
      * @return Total cost of the prescription, otherwise an empty optional.
      */
-    public Optional<Double> getTotalCost() {
-        if (quantity < 1 || drug == null) return Optional.empty();
-        return Optional.of((quantity * drug.getUnitCost() * ONTARIO_HST) + DISPENSING_FEE);
-    }
+//    public Optional<Double> getTotalCost() {
+//        if (quantity < 1 || drug == null) return Optional.empty();
+//        return Optional.of((quantity * drug.getUnitCost() * ONTARIO_HST) + DISPENSING_FEE);
+//    }
 
     /**
      * Get the actual number of days left to go on the prescription.

@@ -14,28 +14,29 @@ import java.util.Optional;
 @Setter
 public class Drug extends AbstractEntity {
 
-    private long drugIdentificationNumber;
-    private String dosage;
-    private String manufacturer;
-    private String brandName;
-    private String genericName;
-    private String description;
-    private String form;
-    private double unitCost;
-    private double stockQuantity;
+    private String dosage_unit;
+    private String dosage_value;
+    private int drug_code;
+    private String ingredient_name;
+    private String strength;
+    private String strength_unit;
 
     @OneToMany
     private List<Prescription> prescriptions = new ArrayList<>();
 
     public Optional<String> getCompleteName() {
-        return Optional.of(String.format("%d %s %s", drugIdentificationNumber, brandName, genericName));
+        return Optional.of(String.format("%d %s %s %s", drug_code, ingredient_name, dosage_unit, dosage_value));
     }
 
     @Override
     public String toString() {
-        return genericName.concat(" ")
-                .concat(dosage)
+        return ingredient_name.concat(" ")
+                .concat(dosage_unit)
                 .concat(" ")
-                .concat(form);
+                .concat(dosage_value)
+                .concat(" ")
+                .concat(strength)
+                .concat(" ")
+                .concat(strength_unit);
     }
 }

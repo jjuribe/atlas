@@ -27,7 +27,7 @@ public class PrescriptionView extends Div {
 
     private final PRMService prmService;
     private PrescriptionSearchBar searchBar;
-    private Grid<Prescription> prescriptionGridPro;
+    private Grid<Prescription> prescriptionGrid;
     private GridLazyDataView<Prescription> prescriptionGridListDataView;
     private Grid.Column<Prescription> patientColumn;
     private Grid.Column<Prescription> drugColumn;
@@ -47,7 +47,7 @@ public class PrescriptionView extends Div {
         setSizeFull();
         createSearchBar();
         createGrid();
-        add(searchBar, prescriptionGridPro);
+        add(searchBar, prescriptionGrid);
     }
 
     private void createGrid() {
@@ -55,18 +55,17 @@ public class PrescriptionView extends Div {
         addColumnsToGrid();
     }
 
-
     private void createGridComponent() {
-        prescriptionGridPro = new Grid<>();
-        prescriptionGridPro.setSelectionMode(SelectionMode.MULTI);
-        prescriptionGridPro.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COLUMN_BORDERS);
-        prescriptionGridPro.setHeight("100%");
+        prescriptionGrid = new Grid<>();
+        prescriptionGrid.setSelectionMode(SelectionMode.MULTI);
+        prescriptionGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_COLUMN_BORDERS);
+        prescriptionGrid.setHeight("100%");
 
         updateGridDataProvider("");
     }
 
     public void updateGridDataProvider(String searchString) {
-        prescriptionGridListDataView = prescriptionGridPro.setItems(query -> {
+        prescriptionGridListDataView = prescriptionGrid.setItems(query -> {
             return prmService.getPrescriptionService().list(
                     PageRequest.of(query.getPage(), query.getPageSize(), VaadinSpringDataHelpers.toSpringDataSort(query)),
                     searchString
@@ -86,7 +85,6 @@ public class PrescriptionView extends Div {
         });
     }
 
-
     private void addColumnsToGrid() {
         createPatientColumn();
         createDrugColumn();
@@ -96,13 +94,13 @@ public class PrescriptionView extends Div {
         createQuantityColumn();
         createRefillsColumn();
         createDaySupplyColumn();
-        createTotalCostColumn();
+        //createTotalCostColumn();
         createDaysRemainingColumn();
         createNextRefillDateColumn();
     }
 
     private void createPatientColumn() {
-        patientColumn = prescriptionGridPro.addColumn(new ComponentRenderer<>(prescription -> {
+        patientColumn = prescriptionGrid.addColumn(new ComponentRenderer<>(prescription -> {
                     HorizontalLayout hl = new HorizontalLayout();
                     hl.setAlignItems(Alignment.CENTER);
                     Span span = new Span();
@@ -115,19 +113,19 @@ public class PrescriptionView extends Div {
     }
 
     private void createDrugColumn() {
-        drugColumn = prescriptionGridPro.addColumn(prescription -> prescription.getDrug().getCompleteName().orElseThrow())
+        drugColumn = prescriptionGrid.addColumn(prescription -> prescription.getDrug().getCompleteName().orElseThrow())
                 .setComparator(prescription -> prescription.getDrug().getCompleteName().orElseThrow())
                 .setHeader("Drug");
     }
 
     private void createPrescriberColumn() {
-        prescriberColumn = prescriptionGridPro.addColumn(prescription -> prescription.getPrescriber().getCompleteName().orElseThrow())
+        prescriberColumn = prescriptionGrid.addColumn(prescription -> prescription.getPrescriber().getCompleteName().orElseThrow())
                 .setComparator(prescription -> prescription.getPrescriber().getCompleteName().orElseThrow())
                 .setHeader("Prescriber");
     }
 
     private void createDispenseDateColumn() {
-        dispenseDateColumn = prescriptionGridPro.addColumn(Prescription::getDispenseDate)
+        dispenseDateColumn = prescriptionGrid.addColumn(Prescription::getDispenseDate)
                 .setComparator(Prescription::getDispenseDate)
                 .setHeader("Dispense Date")
                 .setWidth("180px")
@@ -135,41 +133,41 @@ public class PrescriptionView extends Div {
     }
 
     private void createFrequencyColumn() {
-        frequencyColumn = prescriptionGridPro.addColumn(Prescription::getFrequency)
+        frequencyColumn = prescriptionGrid.addColumn(Prescription::getFrequency)
                 .setComparator(Prescription::getFrequency)
                 .setHeader("Frequency");
     }
 
     private void createQuantityColumn() {
-        quantityColumn = prescriptionGridPro.addColumn(Prescription::getQuantity)
+        quantityColumn = prescriptionGrid.addColumn(Prescription::getQuantity)
                 .setComparator(Prescription::getQuantity)
                 .setHeader("Quantity");
     }
 
     private void createRefillsColumn() {
-        refillsColumn = prescriptionGridPro.addColumn(Prescription::getRefills)
+        refillsColumn = prescriptionGrid.addColumn(Prescription::getRefills)
                 .setComparator(Prescription::getRefills)
                 .setHeader("Refills");
     }
 
     private void createDaySupplyColumn() {
-        daySupplyColumn = prescriptionGridPro.addColumn(Prescription::getDaySupplyDuration)
+        daySupplyColumn = prescriptionGrid.addColumn(Prescription::getDaySupplyDuration)
                 .setComparator(Prescription::getDaySupplyDuration)
                 .setHeader("Day Supply");
     }
 
-    private void createTotalCostColumn() {
-        totalCostColumn = prescriptionGridPro.addColumn(prescription -> prescription.getTotalCost().orElse(0.0))
-                .setHeader("Total Cost");
-    }
+//    private void createTotalCostColumn() {
+//        totalCostColumn = prescriptionGridPro.addColumn(prescription -> prescription.getTotalCost().orElse(0.0))
+//                .setHeader("Total Cost");
+//    }
 
     private void createDaysRemainingColumn() {
-        daysRemainingColumn = prescriptionGridPro.addColumn(prescription -> prescription.getActualDaysRemaining().orElse(0L))
+        daysRemainingColumn = prescriptionGrid.addColumn(prescription -> prescription.getActualDaysRemaining().orElse(0L))
                 .setHeader("Days Left");
     }
 
     private void createNextRefillDateColumn() {
-        nextRefillDateColumn = prescriptionGridPro.addColumn(prescription -> prescription.getNextRefillDate().orElse(LocalDate.now()))
+        nextRefillDateColumn = prescriptionGrid.addColumn(prescription -> prescription.getNextRefillDate().orElse(LocalDate.now()))
                 .setHeader("Next Refill Date");
     }
 }
